@@ -1,3 +1,4 @@
+// backend/index.js
 require("dotenv").config();
 const express = require("express");
 const Razorpay = require("razorpay");
@@ -6,10 +7,18 @@ const cors = require("cors");
 
 const app = express();
 
-app.use(cors());
+// Allow requests from your frontend
+app.use(
+  cors({
+    origin: "https://razorpay-integration-git-main-sri2413s-projects.vercel.app",
+  })
+);
+
 app.use(express.json());
 
-/* Razorpay Instance */
+/* =========================
+   RAZORPAY INSTANCE
+========================= */
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
@@ -27,7 +36,7 @@ app.post("/create-order", async (req, res) => {
     }
 
     const order = await razorpay.orders.create({
-      amount: Math.round(amount * 100), // convert to paise ONLY here
+      amount: Math.round(amount * 100), // Convert rupees to paise
       currency: "INR",
       receipt: `receipt_${Date.now()}`,
     });
@@ -44,11 +53,8 @@ app.post("/create-order", async (req, res) => {
 ========================= */
 app.post("/verify-payment", (req, res) => {
   try {
-    const {
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature,
-    } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
+      req.body;
 
     const body = razorpay_order_id + "|" + razorpay_payment_id;
 
@@ -68,6 +74,7 @@ app.post("/verify-payment", (req, res) => {
   }
 });
 
-app.listen(5000, () => {
-  console.log("Server running on port 5000");
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

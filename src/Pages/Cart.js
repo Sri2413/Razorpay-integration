@@ -1,3 +1,4 @@
+// frontend/src/Cart.js
 import { useLocation, useNavigate } from "react-router-dom";
 import "./Cart.css";
 
@@ -19,11 +20,15 @@ export default function Cart() {
     e.preventDefault();
 
     try {
-      const res = await fetch("http://localhost:5000/create-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: totalAmount }), // send rupees
-      });
+      // Call your deployed backend instead of localhost
+      const res = await fetch(
+        "https://razorpay-integration-2-u3am.onrender.com/create-order",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ amount: totalAmount }),
+        }
+      );
 
       const order = await res.json();
 
@@ -33,7 +38,7 @@ export default function Cart() {
       }
 
       const options = {
-        key: "rzp_test_Ry6xHsPcUus7rj", // PUBLIC key only
+        key: "rzp_test_Ry6xHsPcUus7rj", // PUBLIC key
         amount: order.amount,
         currency: "INR",
         name: "Course Platform",
@@ -41,8 +46,9 @@ export default function Cart() {
         order_id: order.id,
 
         handler: async function (response) {
+          // Verify payment on backend
           const verifyRes = await fetch(
-            "http://localhost:5000/verify-payment",
+            "https://razorpay-integration-2-u3am.onrender.com/verify-payment",
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
