@@ -22,7 +22,7 @@ export default function Cart() {
     try {
       // Call your deployed backend instead of localhost
       const res = await fetch(
-        "https://razorpay-integration-2-u3am.onrender.com/create-order",
+        "https://razorpay-integration-tau.vercel.app",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
