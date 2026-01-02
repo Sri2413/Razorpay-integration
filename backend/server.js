@@ -10,7 +10,7 @@ const app = express();
 // Allow requests from your frontend
 app.use(
   cors({
-    origin: "https://razorpay-integration-git-main-sri2413s-projects.vercel.app",
+    origin: "https://razorpay-integration-tau.vercel.app",
   })
 );
 
