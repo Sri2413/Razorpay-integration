@@ -61,7 +61,7 @@ export default function Cart() {
           if (result.status === "success") {
             navigate("/payment-success");
           } else {
-            alert("Payment verification failed");
+            navigate("/payment-failed");
           }
         },
 
