@@ -1,4 +1,3 @@
-// frontend/src/Cart.js
 import { useLocation, useNavigate } from "react-router-dom";
 import "./Cart.css";
 
@@ -14,13 +13,13 @@ export default function Cart() {
   const price = Number(course.price);
   const GST_RATE = 0.18;
   const gstAmount = price * GST_RATE;
-  const totalAmount = price + gstAmount;
+  const totalAmount = Math.round(price + gstAmount); // Razorpay expects integer
 
   const handlePayment = async (e) => {
     e.preventDefault();
 
     try {
-      // Call your deployed backend instead of localhost
+      // 1️⃣ Create order from backend
       const res = await fetch(
         "https://razorpay-integration-2-u3am.onrender.com/create-order",
         {
@@ -37,8 +36,9 @@ export default function Cart() {
         return;
       }
 
+      // 2️⃣ Razorpay options
       const options = {
-        key: "rzp_test_Ry6xHsPcUus7rj", // PUBLIC key
+        key: "rzp_test_Ry6xHsPcUus7rj", // PUBLIC KEY ONLY
         amount: order.amount,
         currency: "INR",
         name: "Course Platform",
@@ -46,7 +46,7 @@ export default function Cart() {
         order_id: order.id,
 
         handler: async function (response) {
-          // Verify payment on backend
+          // 3️⃣ Verify payment on backend
           const verifyRes = await fetch(
             "https://razorpay-integration-2-u3am.onrender.com/verify-payment",
             {
@@ -65,6 +65,13 @@ export default function Cart() {
           }
         },
 
+        modal: {
+          ondismiss: function () {
+            // User closed payment popup
+            navigate("/payment-failed");
+          },
+        },
+
         prefill: {
           name: "Srikanth",
           email: "srikanth@gmail.com",
@@ -76,11 +83,18 @@ export default function Cart() {
         },
       };
 
+      // 4️⃣ Open Razorpay
       const rzp = new window.Razorpay(options);
+
+      // 5️⃣ Handle payment failure
+      rzp.on("payment.failed", function () {
+        navigate("/payment-failed");
+      });
+
       rzp.open();
     } catch (error) {
       console.error(error);
-      alert("Payment failed. Please try again.");
+      navigate("/payment-failed");
     }
   };
 
