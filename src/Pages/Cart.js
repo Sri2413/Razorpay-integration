@@ -1,4 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
+import loadRazorpay from "../utils/loadRazorpay";
 import "./Cart.css";
 
 export default function Cart() {
@@ -13,13 +14,19 @@ export default function Cart() {
   const price = Number(course.price);
   const GST_RATE = 0.18;
   const gstAmount = price * GST_RATE;
-  const totalAmount = Math.round(price + gstAmount); // Razorpay expects integer
+  const totalAmount = Math.round(price + gstAmount);
 
-  const handlePayment = async (e) => {
-    e.preventDefault();
+  const handlePayment = async () => {
+    // 1️⃣ Load Razorpay SDK
+    const isLoaded = await loadRazorpay();
+
+    if (!isLoaded) {
+      alert("Razorpay SDK failed to load");
+      return;
+    }
 
     try {
-      // 1️⃣ Create order from backend
+      // 2️⃣ Create order
       const res = await fetch(
         "https://razorpay-integration-2-u3am.onrender.com/create-order",
         {
@@ -32,13 +39,13 @@ export default function Cart() {
       const order = await res.json();
 
       if (!order.id) {
-        alert("Order creation failed");
+        navigate("/payment-failed");
         return;
       }
 
-      // 2️⃣ Razorpay options
+      // 3️⃣ Razorpay options
       const options = {
-        key: "rzp_test_Ry6xHsPcUus7rj", // PUBLIC KEY ONLY
+        key: "rzp_test_Ry6xHsPcUus7rj",
         amount: order.amount,
         currency: "INR",
         name: "Course Platform",
@@ -46,7 +53,6 @@ export default function Cart() {
         order_id: order.id,
 
         handler: async function (response) {
-          // 3️⃣ Verify payment on backend
           const verifyRes = await fetch(
             "https://razorpay-integration-2-u3am.onrender.com/verify-payment",
             {
@@ -67,7 +73,6 @@ export default function Cart() {
 
         modal: {
           ondismiss: function () {
-            // User closed payment popup
             navigate("/payment-failed");
           },
         },
@@ -83,10 +88,10 @@ export default function Cart() {
         },
       };
 
-      // 4️⃣ Open Razorpay
+      // 4️⃣ Create Razorpay instance
       const rzp = new window.Razorpay(options);
 
-      // 5️⃣ Handle payment failure
+      // 5️⃣ FAILURE EVENT (THIS WAS MISSING PROPERLY)
       rzp.on("payment.failed", function () {
         navigate("/payment-failed");
       });
@@ -109,28 +114,12 @@ export default function Cart() {
         </div>
 
         <div className="cart-row">
-          <span>Base Price</span>
-          <span>₹{price.toFixed(2)}</span>
-        </div>
-
-        <div className="cart-row">
-          <span>GST (18%)</span>
-          <span>₹{gstAmount.toFixed(2)}</span>
-        </div>
-
-        <hr />
-
-        <div className="cart-total">
-          <span>Total Amount</span>
-          <span>₹{totalAmount.toFixed(2)}</span>
+          <span>Total</span>
+          <span>₹{totalAmount}</span>
         </div>
 
         <button className="pay-btn" onClick={handlePayment}>
           Proceed to Pay
-        </button>
-
-        <button className="back-btn" onClick={() => navigate("/")}>
-          Back to Courses
         </button>
       </div>
     </div>
